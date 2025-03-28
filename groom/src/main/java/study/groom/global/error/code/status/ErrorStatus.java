@@ -4,13 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import study.groom.global.error.code.BaseErrorCode;
+import study.groom.global.error.code.ErrorReasonDTO;
 
 @Getter
 @AllArgsConstructor
 public enum ErrorStatus implements BaseErrorCode {
 
-    //Common
-    COMMON_ERROR(HttpStatus.BAD_REQUEST, "COMMON_4000", "실패했습니다.");
+    // 기본 에러
+    _INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "서버 에러, 관리자에게 문의 바랍니다."),
+    _BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON400", "잘못된 요청입니다."),
+    _UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON401", "인증이 필요합니다."),
+    _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
@@ -24,5 +28,15 @@ public enum ErrorStatus implements BaseErrorCode {
     @Override
     public String getMessage() {
         return message;
+    }
+
+    @Override
+    public ErrorReasonDTO getReasonHttpStatus() {
+        return ErrorReasonDTO.builder()
+                .message(message)
+                .code(code)
+                .isSuccess(false)
+                .httpStatus(httpStatus)
+                .build();
     }
 }
