@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import study.groom.domain.cloth.application.ClothService;
 import study.groom.domain.cloth.dto.ClothResponseDTO;
+import study.groom.domain.model.enums.ClothSort;
 import study.groom.global.common.response.BaseResponse;
 import study.groom.global.error.code.status.SuccessStatus;
 
@@ -32,6 +33,29 @@ public class ClothRestController {
             @PathVariable(name = "cloth-id") Long clothId
     ) {
         ClothResponseDTO.ClothEditViewResult result = clothService.getClothEditView(clothId);
+
+        return BaseResponse.onSuccess(SuccessStatus.CLOTH_VIEW_SUCCESS, result);
+    }
+
+    @GetMapping("/closet-view")
+    @Operation( summary = "유저의 옷장을 조회하는 API", description = "query string으로 sort, page, size를 넘겨주세요.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse( responseCode = "CLOTH_200", description = "OK, 성공적으로 조회되었습니다.")
+    })
+    @Parameters({
+            @Parameter(name = "clokey-id", description = "클로키 유저의 clokey id, query string 입니다."),
+            @Parameter(name = "sort", description = "정렬(Sort) ENUM 값 { WEAR, NOT_WEAR, LATEST, OLDEST }, query string 입니다."),
+            @Parameter(name = "page", description = "페이지 값, query string 입니다."),
+            @Parameter(name = "size", description = "페이지에 표시할 요소 개수 값, query string 입니다.")
+    })
+    public BaseResponse<ClothResponseDTO.MemberClosetResult> getMemberCloset(
+            @RequestParam(value = "clokey-id") String clokeyId,
+            @RequestParam ClothSort sort,
+            @RequestParam int page,
+            @RequestParam int size
+    ) {
+
+        ClothResponseDTO.MemberClosetResult result = clothService.getMemberCloset(clokeyId,sort,page,size);
 
         return BaseResponse.onSuccess(SuccessStatus.CLOTH_VIEW_SUCCESS, result);
     }

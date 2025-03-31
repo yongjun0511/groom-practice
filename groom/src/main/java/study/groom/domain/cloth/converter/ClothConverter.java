@@ -1,7 +1,13 @@
 package study.groom.domain.cloth.converter;
 
+import org.springframework.data.domain.Page;
 import study.groom.domain.cloth.domain.entity.Cloth;
 import study.groom.domain.cloth.dto.ClothResponseDTO;
+import study.groom.domain.member.domain.entity.Member;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ClothConverter {
 
@@ -18,5 +24,33 @@ public class ClothConverter {
                 .tempUpperBound(cloth.getTempUpperBound())
                 .thicknessLevel(cloth.getThicknessLevel())
                 .build();
+    }
+
+    public static ClothResponseDTO.MemberClosetResult toMemberClosetResult(Member member, Map<Long,String> firstImagesOfCloth, Page<Cloth> clothes){
+        return ClothResponseDTO.MemberClosetResult.builder()
+                .nickName(member.getNickname())
+                .clothPreviewListResult(toClothPreviewListResult(firstImagesOfCloth, clothes))
+                .build();
+    }
+
+    private static ClothResponseDTO.ClothPreviewListResult toClothPreviewListResult(Map<Long, String> firstImagesOfCloth, Page<Cloth> clothes){
+        return ClothResponseDTO.ClothPreviewListResult.builder()
+                .clothPreviews(toClothPreview(firstImagesOfCloth, clothes))
+                .isFirst(clothes.isFirst())
+                .isLast(clothes.isLast())
+                .totalElements(clothes.getTotalElements())
+                .totalPage(clothes.getTotalPages())
+                .build();
+    }
+
+    private static List<ClothResponseDTO.ClothPreview> toClothPreview(Map<Long, String> firstImagesOfCloth, Page<Cloth> clothes){
+        return clothes.stream()
+                .map(cloth -> ClothResponseDTO.ClothPreview.builder()
+                        .id(cloth.getId())
+                        .name(cloth.getName())
+                        .wearNum(cloth.getWearNum())
+                        .imageUrl(firstImagesOfCloth.get(cloth.getId()))
+                        .build())
+                .collect(Collectors.toList());
     }
 }
