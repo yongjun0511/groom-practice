@@ -5,11 +5,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.multipart.MultipartFile;
 import study.groom.domain.cloth.converter.ClothConverter;
+import study.groom.domain.cloth.domain.entity.Category;
 import study.groom.domain.cloth.domain.entity.Cloth;
 import study.groom.domain.cloth.domain.entity.ClothImage;
+import study.groom.domain.cloth.domain.repository.CategoryRepository;
 import study.groom.domain.cloth.domain.repository.ClothImageRepository;
 import study.groom.domain.cloth.domain.repository.ClothRepository;
+import study.groom.domain.cloth.dto.ClothRequestDTO;
 import study.groom.domain.cloth.dto.ClothResponseDTO;
 import study.groom.domain.cloth.exception.ClothException;
 import study.groom.domain.member.domain.entity.Member;
@@ -29,6 +34,7 @@ public class ClothServiceImpl implements ClothService {
     private final ClothImageRepository clothImageRepository;
     private final MemberRepository memberRepository;
     private final ClothImageQueryService clothImageQueryService;
+    private final CategoryRepository categoryRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -49,6 +55,7 @@ public class ClothServiceImpl implements ClothService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClothResponseDTO.MemberClosetResult getMemberCloset(String clokeyId, ClothSort sort, int page, int size) {
 
         Member member = memberRepository.findByClokeyId(clokeyId)
@@ -70,6 +77,34 @@ public class ClothServiceImpl implements ClothService {
         Map<Long, String> firstImagesOfCloth = clothImageQueryService.getFirstImageUrlMap(clothes);
 
         return ClothConverter.toMemberClosetResult(member,firstImagesOfCloth,clothes);
+    }
+
+    @Override
+    @Transactional
+    public ClothResponseDTO.ClothCreateResult createCloth(ClothRequestDTO.ClothCreateRequest clothCreateResult, MultipartFile image) {
+
+        Member member = memberRepository.findById(clothCreateResult.getMemberId())
+                .orElseThrow(()-> new MemberException(ErrorStatus.NO_SUCH_MEMBER));
+
+        Category category = categoryRepository.findById(clothCreateResult.getCategoryId())
+                .orElseThrow(()-> new ClothException(ErrorStatus.NO_SUCH_CATEGORY));
+
+        Cloth newCloth = Cloth.builder()
+                .name(clothCreateResult.getName())
+                .wearNum(0)
+                .season(clothCreateResult.getSeasons())
+                .tempUpperBound(clothCreateResult.getTempUpperBound())
+                .tempLowerBound(clothCreateResult.getTempLowerBound())
+                .thicknessLevel(clothCreateResult.getThicknessLevel())
+                .clothUrl(clothCreateResult.getClothUrl())
+                .brand(clothCreateResult.getBrand())
+                .category(category)
+                .member(member)
+                .build();
+
+        clothRepository.save(newCloth);
+
+        return ClothConverter.toClothCreateResult(newCloth);
     }
 
 }

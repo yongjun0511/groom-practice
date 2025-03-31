@@ -11,8 +11,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import study.groom.domain.cloth.application.ClothService;
+import study.groom.domain.cloth.dto.ClothRequestDTO;
 import study.groom.domain.cloth.dto.ClothResponseDTO;
 import study.groom.domain.model.enums.ClothSort;
+import study.groom.domain.model.exception.annotation.CheckPage;
+import study.groom.domain.model.exception.annotation.CheckPageSize;
 import study.groom.global.common.response.BaseResponse;
 import study.groom.global.error.code.status.SuccessStatus;
 
@@ -51,12 +54,27 @@ public class ClothRestController {
     public BaseResponse<ClothResponseDTO.MemberClosetResult> getMemberCloset(
             @RequestParam(value = "clokey-id") String clokeyId,
             @RequestParam ClothSort sort,
-            @RequestParam int page,
-            @RequestParam int size
+            @RequestParam @CheckPage int page,
+            @RequestParam @CheckPageSize int size
     ) {
 
-        ClothResponseDTO.MemberClosetResult result = clothService.getMemberCloset(clokeyId,sort,page,size);
+        ClothResponseDTO.MemberClosetResult result = clothService.getMemberCloset(clokeyId,sort,page-1,size);
 
         return BaseResponse.onSuccess(SuccessStatus.CLOTH_VIEW_SUCCESS, result);
     }
+
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "새로운 옷을 생성하는 API", description = "request body에 ClothCreateRequest 형식의 데이터를 전달해주세요.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "CLOTH_201", description = "CREATED, 성공적으로 생성되었습니다."),
+    })
+    public BaseResponse<ClothResponseDTO.ClothCreateResult> createCloth(
+            @RequestPart("clothCreateRequest") ClothRequestDTO.ClothCreateRequest clothCreateRequest,
+            @RequestPart("imageFile") MultipartFile imageFile
+    ) {
+        ClothResponseDTO.ClothCreateResult result = clothService.createCloth(clothCreateRequest,imageFile);
+
+        return BaseResponse.onSuccess(SuccessStatus.CLOTH_CREATED, result);
+    }
+
 }
