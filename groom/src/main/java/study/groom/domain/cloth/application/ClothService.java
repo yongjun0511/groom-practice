@@ -12,4 +12,6 @@ public interface ClothService {
     ClothResponseDTO.MemberClosetResult getMemberCloset(String clokeyId, ClothSort sort, int page, int size);
 
     ClothResponseDTO.ClothCreateResult createCloth(ClothRequestDTO.ClothCreateRequest clothCreateResult, MultipartFile image);
+
+    void deleteCloth(Long clothId);
 }

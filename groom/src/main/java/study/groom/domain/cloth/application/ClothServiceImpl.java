@@ -17,6 +17,8 @@ import study.groom.domain.cloth.domain.repository.ClothRepository;
 import study.groom.domain.cloth.dto.ClothRequestDTO;
 import study.groom.domain.cloth.dto.ClothResponseDTO;
 import study.groom.domain.cloth.exception.ClothException;
+import study.groom.domain.folder.domain.repository.ClothFolderRepository;
+import study.groom.domain.history.domain.repository.HistoryClothRepository;
 import study.groom.domain.member.domain.entity.Member;
 import study.groom.domain.member.domain.exception.MemberException;
 import study.groom.domain.member.domain.repository.MemberRepository;
@@ -35,6 +37,8 @@ public class ClothServiceImpl implements ClothService {
     private final MemberRepository memberRepository;
     private final ClothImageQueryService clothImageQueryService;
     private final CategoryRepository categoryRepository;
+    private final ClothFolderRepository clothFolderRepository;
+    private final HistoryClothRepository historyClothRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -104,7 +108,29 @@ public class ClothServiceImpl implements ClothService {
 
         clothRepository.save(newCloth);
 
+        ClothImage newClothImage = ClothImage.builder()
+                .cloth(newCloth)
+                .imageUrl("아직 S3를 구현하지 않아서 url이 없어용")
+                .build();
+
+        clothImageRepository.save(newClothImage);
+
         return ClothConverter.toClothCreateResult(newCloth);
+    }
+
+    @Override
+    public void deleteCloth(Long clothId) {
+
+        Cloth cloth = clothRepository.findById(clothId)
+                .orElseThrow(()-> new ClothException(ErrorStatus.NO_SUCH_CLOTH));
+
+        //매핑 테이블 삭제
+        clothImageRepository.deleteAllByCloth(cloth);
+        clothFolderRepository.deleteAllByCloth(cloth);
+        historyClothRepository.deleteAllByCloth(cloth);
+
+        //최종 옷 삭제
+        clothRepository.delete(cloth);
     }
 
 }
