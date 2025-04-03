@@ -119,6 +119,7 @@ public class ClothServiceImpl implements ClothService {
     }
 
     @Override
+    @Transactional
     public void deleteCloth(Long clothId) {
 
         Cloth cloth = clothRepository.findById(clothId)
